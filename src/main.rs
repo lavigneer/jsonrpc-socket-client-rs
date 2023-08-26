@@ -154,28 +154,11 @@ impl SocketClientBuilder {
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = run_server().await?;
-
-    // let url = "127.0.0.1:8080";
+    let url = "127.0.0.1:8080";
     let builder = SocketClientBuilder::new();
-    let client = builder.build(addr).await?;
+    let client = builder.build(url).await?;
     let response: String = client.request("say_hello", rpc_params![]).await?;
     println!("{:?}", response);
 
     Ok(())
-}
-
-async fn run_server() -> anyhow::Result<SocketAddr> {
-    let server = Server::builder().build("127.0.0.1:0").await?;
-    let mut module = RpcModule::new(());
-    module.register_method("say_hello", |_, _| "lo")?;
-    let addr = server.local_addr()?;
-
-    let handle = server.start(module);
-
-    // In this example we don't care about doing shutdown so let's it run forever.
-    // You may use the `ServerHandle` to shut it down or manage it yourself.
-    tokio::spawn(handle.stopped());
-
-    Ok(addr)
 }
