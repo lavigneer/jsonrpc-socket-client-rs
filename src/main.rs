@@ -1,4 +1,3 @@
-use std::net::SocketAddr;
 use std::time::Duration;
 
 use futures_util::sink::SinkExt;
@@ -10,7 +9,6 @@ use jsonrpsee_core::{
     async_trait,
     client::{ReceivedMessage, TransportReceiverT, TransportSenderT},
 };
-use jsonrpsee_server::{RpcModule, Server};
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tokio_util::codec::{AnyDelimiterCodec, AnyDelimiterCodecError, Framed};
 
@@ -81,7 +79,7 @@ pub struct SocketClientBuilder {
 impl Default for SocketClientBuilder {
     fn default() -> Self {
         Self {
-            id_kind: IdKind::Number,
+            id_kind: IdKind::String,
             max_log_length: 4096,
             max_concurrent_requests: 256,
             max_buffer_capacity_per_subscription: 1024,
