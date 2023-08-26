@@ -1,0 +1,17 @@
+[package]
+name = "jsonrpsee-ipc-client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.75"
+bytes = "1.4.0"
+futures-util = { version = "0.3.28", features = ["sink"] }
+jsonrpsee-core = { version = "0.20.0", features = ["client", "async-client"] }
+jsonrpsee-server = "0.20.0"
+thiserror = "1.0.47"
+tokio = { version = "1.32.0", features = ["full"] }
+tokio-stream = "0.1.14"
+tokio-util = { version = "0.7.8", features = ["codec"] }
