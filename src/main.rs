@@ -1,19 +1,23 @@
 use std::time::Duration;
 
+use codec::{RPCDelimiterCodec, RPCDelimiterCodecError};
 use futures_util::sink::SinkExt;
 use futures_util::stream::{SplitSink, SplitStream, StreamExt};
 use jsonrpsee_core::client::{Client, ClientBuilder};
 use jsonrpsee_core::client::{ClientT, IdKind};
+use jsonrpsee_core::params::ArrayParams;
 use jsonrpsee_core::rpc_params;
 use jsonrpsee_core::{
     async_trait,
     client::{ReceivedMessage, TransportReceiverT, TransportSenderT},
 };
 use tokio::net::{TcpStream, ToSocketAddrs};
-use tokio_util::codec::{AnyDelimiterCodec, AnyDelimiterCodecError, Framed};
+use tokio_util::codec::Framed;
 
-pub struct Sender(SplitSink<Framed<TcpStream, AnyDelimiterCodec>, String>);
-pub struct Receiver(SplitStream<Framed<TcpStream, AnyDelimiterCodec>>);
+mod codec;
+
+pub struct Sender(SplitSink<Framed<TcpStream, RPCDelimiterCodec>, String>);
+pub struct Receiver(SplitStream<Framed<TcpStream, RPCDelimiterCodec>>);
 
 #[derive(Debug, thiserror::Error)]
 pub enum SocketErr {
@@ -25,16 +29,16 @@ pub enum SocketErr {
     CannotConnect,
 
     #[error("Socket Error: {0:?}")]
-    SendError(AnyDelimiterCodecError),
+    SendError(RPCDelimiterCodecError),
 
     #[error("Socket Error: {0:?}")]
-    ReceiveError(AnyDelimiterCodecError),
+    ReceiveError(RPCDelimiterCodecError),
 }
 
 #[async_trait()]
 impl TransportSenderT for Sender {
     #[doc = " Error that may occur during sending a message."]
-    type Error = AnyDelimiterCodecError;
+    type Error = RPCDelimiterCodecError;
 
     #[doc = " Send."]
     async fn send(&mut self, msg: String) -> Result<(), Self::Error> {
@@ -62,7 +66,7 @@ pub async fn connect(url: impl ToSocketAddrs) -> Result<(Sender, Receiver), Sock
     let stream = TcpStream::connect(url)
         .await
         .map_err(|_err| SocketErr::SenderDisconnected)?;
-    let codec = AnyDelimiterCodec::new_with_max_length(b"\n".to_vec(), b"\n".to_vec(), usize::MAX);
+    let codec = RPCDelimiterCodec::default();
     let framed_sock = Framed::new(stream, codec);
     let (frame_sink, frame_stream) = framed_sock.split::<String>();
     Ok((Sender(frame_sink), Receiver(frame_stream)))
@@ -152,10 +156,12 @@ impl SocketClientBuilder {
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let url = "127.0.0.1:8080";
+    let url = "192.168.2.213:12000";
     let builder = SocketClientBuilder::new();
     let client = builder.build(url).await?;
-    let response: String = client.request("say_hello", rpc_params![]).await?;
+    let response = client
+        .request::<String, ArrayParams>("get.terminals", rpc_params![])
+        .await?;
     println!("{:?}", response);
 
     Ok(())
