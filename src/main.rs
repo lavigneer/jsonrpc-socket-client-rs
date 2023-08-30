@@ -3,6 +3,7 @@ use std::time::Duration;
 use codec::{RPCDelimiterCodec, RPCDelimiterCodecError};
 use futures_util::sink::SinkExt;
 use futures_util::stream::{SplitSink, SplitStream, StreamExt};
+use futures_util::FutureExt;
 use jsonrpsee_core::client::{Client, ClientBuilder};
 use jsonrpsee_core::client::{ClientT, IdKind};
 use jsonrpsee_core::params::ArrayParams;
@@ -83,7 +84,7 @@ pub struct SocketClientBuilder {
 impl Default for SocketClientBuilder {
     fn default() -> Self {
         Self {
-            id_kind: IdKind::String,
+            id_kind: IdKind::Number,
             max_log_length: 4096,
             max_concurrent_requests: 256,
             max_buffer_capacity_per_subscription: 1024,
@@ -159,8 +160,14 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = "192.168.2.213:12000";
     let builder = SocketClientBuilder::new();
     let client = builder.build(url).await?;
+
+    // Throwaway call to force the request id to 1 for real calls
+    client
+        .request::<String, ArrayParams>("", rpc_params![])
+        .now_or_never();
+
     let response = client
-        .request::<String, ArrayParams>("get.terminals", rpc_params![])
+        .request::<Vec<String>, ArrayParams>("list.name.sets", rpc_params![])
         .await?;
     println!("{:?}", response);
 
