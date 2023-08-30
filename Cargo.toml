@@ -1,5 +1,5 @@
 [package]
-name = "jsonrpc-socket-client"
+name = "jsonrpc_socket_client"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 bytes = "1.4.0"
+clap = { version = "4.4.1", features = ["derive"] }
 futures-util = { version = "0.3.28", features = ["sink"] }
 jsonrpsee-core = { version = "0.20.0", features = ["client", "async-client"] }
 thiserror = "1.0.47"
